@@ -1,6 +1,7 @@
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 //lines start at 1
 public class Filer {
 	public class Stringlink {
@@ -8,13 +9,19 @@ public class Filer {
 		Stringlink next = null;
 		Stringlink last = null;
 	}
-	private Stringlink thefile = null;
+	private String eol() {
+		if (!windows)
+			return "\n";
+		return "\r\n";
+	}
+	private Stringlink thefile = new Stringlink();
 	private File file = new File("null");
-	private Stringlink rowlink = null;
+	private Stringlink rowlink = thefile;
 	private File[] filelist = null;
-	private int row = 0;
-	private int lines = 0;
+	private int row = 1;
+	private int lines = 1;
 	private int column = 0;
+	public boolean windows = false;
 	public Filer() {
 		newfile();
 	}
@@ -81,24 +88,24 @@ public class Filer {
 //	row
 //	column
 	public void readfile() {
-		int next;
 		newfile();
-		Stringlink templink = thefile;
 		try {
-			FileInputStream input = new FileInputStream(file);
-			next = input.read();
-			while (next >= 0) {
-				if (next != 13 && next != 10)
-					templink.line = templink.line + (char)(next);
-				else if (next == 10) {
+			BufferedReader br = new BufferedReader(new FileReader(file));
+			String line = br.readLine();
+			if (line != null) {
+				Stringlink templink = thefile;
+				templink.line = line;
+				line = br.readLine();
+				while (line != null) {
 					templink.next = new Stringlink();
 					templink.next.last = templink;
 					templink = templink.next;
 					lines = lines + 1;
+					templink.line = line;
+					line = br.readLine();
 				}
-				next = input.read();
 			}
-			input.close();
+			br.close();
 		} catch(Exception e) {
 			System.out.println("Sorry, an error occured:\n" + e + "\nYour file could not be read.");
 		}
@@ -113,12 +120,21 @@ public class Filer {
 	public String[] getlines() {
 		Stringlink templink = thefile;
 		String[] thelines = new String[lines];
-		for (int pos = 1; pos < thelines.length; pos += 1) {
-			thelines[pos - 1] = templink.line;
+		for (int pos = 0; pos < lines; pos += 1) {
+			thelines[pos] = templink.line;
 			templink = templink.next;
 		}
-		thelines[thelines.length - 1] = templink.line;
 		return thelines;
+	}
+	public String getlinesasstring() {
+		StringBuilder sb = new StringBuilder(1024);
+		String eol = eol();
+		Stringlink templink = thefile;
+		for (; templink.next != null; templink = templink.next) {
+			sb.append(templink.line + eol);
+		}
+		sb.append(templink.line);
+		return sb.toString();
 	}
 	public int row() {
 		return row;
@@ -265,8 +281,9 @@ public class Filer {
 		try {
 			FileWriter writer = new FileWriter(file);
 			rowlink = thefile;
+			String eol = eol();
 			while (rowlink.next != null) {
-				writer.write(rowlink.line + "\r\n");
+				writer.write(rowlink.line + eol);
 				rowlink = rowlink.next;
 			}
 			writer.write(rowlink.line);

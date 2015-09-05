@@ -38,6 +38,8 @@ image, and each box is 8 pixels wide. The currently drawable section of the imag
 this area as an 8x enlarged image. The 200x200 pixel box below the main draw screen displays the
 image actual-sized, and can be dragged to allow you to edit a different section of the image.
 
+ By changing the size of the window, you can change the size of the draw screen.
+
  There are various ways to edit the image. The manner in which the image is edited is controlled by
 the control panel, which spans the rest of the Image Maker window.
 
@@ -64,7 +66,7 @@ transparent pixels around the edge. If you erase, and the image consists entirel
 pixels, the image is cleared.
 
  The third tool is Absorb, and its use is simply to select a pixel, and its color will become the
-currently selected color. You cannot absorb fully-transparent colors.
+currently selected color.
 
 
 
@@ -104,7 +106,7 @@ topleft corner of the draw screen.
  Below the Reset button is a button called Import. This button allows you to import and use many
 images together. After clicking the button, the terminal you used to run the java program will
 prompt for the name of an image. This image shares the same format as images that can be used at the
-start of the program, they must be in the images folder and be in .png format. After typing in the
+start of the program- they must be in the images folder and be in .png format. After typing in the
 name of the image and pressing enter, the program will return you to the Image Maker window.
 
 
@@ -113,27 +115,31 @@ name of the image and pressing enter, the program will return you to the Image M
 are listed as follows:
 - Stats: displays some information on the bottom left corner of the screen, in particular the width
     & height of the image, the x and y of the image in the program, and the color values of the
-    currently selected color. This option defaults to off.
+    currently selected color. This option defaults to off, but can be set to display stats in
+    either decimal or hexadecimal.
 - Border: displays a red & green border around the edges of the image in the draw area, and a yellow
     border around the image in the image dragging area. This option defaults to off.
 - Xs: controls the Xs that appear in the draw area behind the image. The first option turns off the
     Xs display, the second option displays black Xs, and the third option will take the current
     draw color, store it, and use it as the X color. This option defaults to black.
-- Background: just like Xs, controls the background color. The first option is a gray background,
-    the second is a white background, the third is a black background, and the fourth uses the
-    current color just like Xs. This option defaults to gray.
-- Pixel Size: allows you to change the size of the pixels in the draw screen. The first option uses
-    a 50x50 grid of 8x8 pixels, the second option uses a 100x100 grid of 4x4 pixels. Swapping
-    between the two does not change the image. This option defaults to 8x8.
+- Background: just like Xs, controls the background color of the draw screen and the mini draw
+    screen. The first option is a gray background, the second is a white background, the third is a
+    black background, and the fourth uses the current color just like Xs. This option defaults to
+    gray.
+- Pixel Size: allows you to change the size of the pixels in the draw screen. You can choose between
+    a grid of 16x16, 8x8, 4x4, 2x2, or 1x1 pixels. This option defaults to 8x8.
+- Display: just like Xs and background, this controls the display color of the overall program
+    background. The first option is an orange background, the second option uses the current color
+    just like Xs and background.
  At the top of the Options menu is a Save button. This will save your options as options.txt, and
 will be loaded during program startup.
 
 
 
- Right under the Options button, you will notice three buttons with arrows, two of which are grayed
-out at the beginning of the program. The left and middle buttons are the undo/redo buttons,
-respectively. Any changes to the image itself are recorded, and you can click these buttons to move
-between the different edits of your image. The button on the right will be covered later.
+ Right under the Options button, you will notice two buttons with arrows which are grayed out at the
+beginning of the program. The left and right buttons are the undo/redo buttons, respectively. Any
+changes to the image itself are recorded, and you can click these buttons to move between the
+different edits of your image.
 
 
 
@@ -166,21 +172,20 @@ SECTION 4- Alternate Panels
 
  And finally, we have alternate panels! There are two buttons on the Image Maker that have not yet
 been covered. The first one is labelled "Switch Panels" and is on the right side of the screen above
-Draw. Clicking this will give you a list of available panels to choose. All of the features we've
-covered so far are part of the Standard Panel, listed at the top. The Image Maker, however, has the
-ability to use any other panel at all, provided that it follows some guidelines.
+Draw. Clicking this will give you a list of available panels to choose. You can also scroll on the
+list to change between them. All of the features we've covered so far are part of the Standard
+Panel, listed at the top. The Image Maker, however, has the ability to use other panels, provided
+that it follows some guidelines.
 
  These panels are fully separate programs created by you, myself or someone else. In order for a
 panel to be recognized by the Image Maker, you must program and compile a class that has a certain
 set of methods and a certain constructor, and exist in the "addons" folder. There is a template to
 create panels in the folder, which has the format of a java program, in addition to other
 information about how other panels are implemented.
- I've created some panels for use with the Image Maker, they can be downloaded and extracted to the
-addons folder. These have their own README files.
 
  Panels only have access to certain parts of the Image Maker, and do not have access to undoing and
-redoing. There is one last button on the standard panel, next to undo/redo, which captures the image
-in its current state, allowing you to undo edits done by other panels.
+redoing. When switching from the Standard Panel, the program will automatically make a copy of the
+image that you can undo to after using other panels.
 
  When a panel is active, it will be drawn on the screen in the place of the standard panel. The only
 things that will be drawn are the draw screen & image, the drag box & image, the Switch Panels
@@ -191,5 +196,5 @@ to do that themselves.
 
 
 
- And that's that! You now know how to work the Image Maker program. Feel free to send an e-mail with
-suggestions, misspellings, confusions, or bug reports.
+ And that's that! You now know how to work the Image Maker program. Feel free to send an e-mail to
+gregory.loden@gmail.com with suggestions, misspellings, confusions, or bug reports.
