@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 //option for file format
 //option for hex stats
 public class imagemaker extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
+	//turn a string into an integer
 	public static int readint(String line) {
 		int digit = -1;
 		int number = 0;
@@ -54,6 +55,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 	public static int screenheight() {
 		return Toolkit.getDefaultToolkit().getScreenSize().height;
 	}
+	//get a terminal input line
 	public static String line() {
 		Scanner scan = new Scanner(System.in);
 		return scan.nextLine();
@@ -110,6 +112,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 	public static void main(String[] args) {
 		imagemaker thepanel = new imagemaker();
 		String filename = "";
+		//load a file
 		if (args.length > 0) {
 			filename = args[0];
 			try{
@@ -118,6 +121,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				System.out.println("File \"" + filename + "\" could not be loaded. Continuing without file.");
 			}
 		}
+		//read the input from the saved options
 		if (filer.fileisthere()) {
 			filer.readfile();
 			String[] lines = filer.getlines();
@@ -142,6 +146,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			if (thepanel.backsetting != 0 || thepanel.Xs != 1 || thepanel.size != 8)
 				thepanel.bgsetup(thepanel.bgimage.createGraphics());
 		}
+		//manage addons
 		File addons = new File("addons");
 		File[] panelfiles = addons.listFiles();
 		String name = "";
@@ -151,10 +156,12 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		Method[][] allmethods = new Method[panelfiles.length][4];
 		String[] allnames = new String[panelfiles.length];
 		try {
+			//find class files
 			URLClassLoader urlcl = new URLClassLoader(new URL[] {addons.toURI().toURL()});
 			Class<?> theclass = null;
 			for (int spot = 0; spot < panelfiles.length; spot += 1) {
 				name = panelfiles[spot].getName();
+				//try to add the class to the list
 				if (name.endsWith(".class")) {
 					try {
 						theclass = urlcl.loadClass(name.substring(0, name.length() - 6));
@@ -170,6 +177,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					}
 				}
 			}
+			//update the panels list with all availabl panels
 			thepanel.panels = new Object[count];
 			thepanel.methods = new Method[count][0];
 			thepanel.names = new String[count];
@@ -184,6 +192,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			}
 		} catch(Exception e) {
 		}
+		//launch window
 		JFrame window = new JFrame("Image Maker");
 		window.setContentPane(thepanel);
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -192,6 +201,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		window.setVisible(true);
 		thepanel.requestFocus();
 		window.toFront();
+		//loop to allow importing and saving
 		while (thepanel.done == 0) {
 			while (thepanel.done == 0) {
 				try {
@@ -199,6 +209,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				} catch(Exception e) {
 				}
 			}
+			//importing
 			if (thepanel.done == 2) {
 				System.out.println("Enter the name of the file you wish to import to the copy image:");
 				try {
@@ -214,6 +225,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				window.toFront();
 			}
 		}
+		//saving the file
 		window.dispose();
 		if (filename.equals(""))
 			System.out.println("Enter the name of the file you wish to save:");
@@ -238,6 +250,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		setup(panelimage.createGraphics());
 	}
 	public void paintComponent(Graphics g) {
+		//try to draw the screen, but if it runs out of memory, clear the event history
 		try {
 			safepaintComponent(g);
 		} catch(OutOfMemoryError e) {
@@ -258,45 +271,46 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		int max = 200 / size + 100;
 		int min = max - 200;
 		int max2 = 400 / size;
-//drawing the image
+		//drawing the image
 		if (mainimage != null) {
 			iwidth = mainimage.getWidth();
 			iheight = mainimage.getHeight();
-			int pixel = 0;
+			//draw the image on the tiny screen
 			if (imagex + iwidth > min && imagex < max && imagey + iheight > min && imagey < max)
 				g.drawImage(mainimage.getSubimage(Math.max(0, min - imagex), Math.max(0, min - imagey), Math.min(200, imagex - min + iwidth) - Math.max(0, imagex - min), Math.min(200, imagey - min + iheight) - Math.max(0, imagey - min)), Math.max(0, imagex - min) + 100, Math.max(0, imagey - min) + 400, null);
+			//draw the image on the big screen
 			if (imagex + iwidth > 0 && imagex < max2 && imagey + iheight > 0 && imagey < max2)
 				g.drawImage(mainimage, Math.max(0, imagex * size), Math.max(0, imagey * size), Math.min(400, (iwidth + imagex) * size), Math.min(400, (iheight + imagey) * size), Math.max(0, -imagex), Math.max(0, -imagey), Math.min(iwidth, max2 - imagex), Math.min(iheight, max2 - imagey), null);
 		}
-//borders
+		//borders
 		if (mainimage != null && border) {
 			int left = 0;
 			int right = 0;
 			int top = 0;
 			int bottom = 0;
 			g.setColor(Color.YELLOW);
-//left small
+			//left small
 			if (imagex > min && imagex <= max && imagey > min - iheight - 1 && imagey <= max + 1) {
 				top = Math.max(imagey - 1 - min, 0) + 400;
 				bottom = Math.min(imagey + iheight - min, 199) + 400;
 				left = imagex + 99 - min;
 				g.drawLine(left, top, left, bottom);
 			}
-//right small
+			//right small
 			if (imagex >= min - iwidth && imagex < max - iwidth && imagey > min - iheight - 1 && imagey <= max + 1) {
 				top = Math.max(imagey - 1 - min, 0) + 400;
 				bottom = Math.min(imagey + iheight - min, 199) + 400;
 				right = imagex + iwidth + 100 - min;
 				g.drawLine(right, top, right, bottom);
 			}
-//top small
+			//top small
 			if (imagex > min - iwidth - 1 && imagex <= max + 1 && imagey > min && imagey <= max) {
 				left = Math.max(imagex - min, 0) + 100;
 				right = Math.min(imagex + iwidth - min, 200) + 99;
 				top = imagey + 399 - min;
 				g.drawLine(left, top, right, top);
 			}
-//bottom small
+			//bottom small
 			if (imagex > min - iwidth - 1 && imagex <= max + 1 && imagey >= min - iheight && imagey < max - iheight) {
 				left = Math.max(imagex - min, 0) + 100;
 				right = Math.min(imagex + iwidth - min, 200) + 99;
@@ -306,7 +320,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			int msize = size / 4;
 			int msize2 = msize * 2;
 			int msize3 = msize * 3;
-//left large
+			//left large
 			if (imagex > 0 && imagex <= max2 && imagey > 0 - iheight && imagey <= max2) {
 				top = Math.max(imagey, 0) * size;
 				bottom = Math.min(imagey + iheight, max2) * size;
@@ -316,7 +330,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(Color.GREEN);
 				g.fillRect(imagex * size - msize3, top, msize2, bottom - top);
 			}
-//right large
+			//right large
 			if (imagex >= 0 - iwidth && imagex < max2 - iwidth && imagey > 0 - iheight && imagey <= max2) {
 				top = Math.max(imagey, 0) * size;
 				bottom = Math.min(imagey + iheight, max2) * size;
@@ -326,7 +340,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(Color.GREEN);
 				g.fillRect((imagex + iwidth) * size + msize, top, msize2, bottom - top);
 			}
-//top large
+			//top large
 			if (imagey > 0 && imagey <= max2 && imagex > 0 - iwidth && imagex <= max2) {
 				left = Math.max(imagex, 0) * size;
 				right = Math.min(imagex + iwidth, max2) * size;
@@ -336,7 +350,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(Color.GREEN);
 				g.fillRect(left, imagey * size - msize3, right - left, msize2);
 			}
-//bottom large
+			//bottom large
 			if (imagey >= 0 - iheight && imagey < max2 - iheight && imagex > 0 - iwidth && imagex <= max2) {
 				left = Math.max(imagex, 0) * size;
 				right = Math.min(imagex + iwidth, max2) * size;
@@ -346,7 +360,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(Color.GREEN);
 				g.fillRect(left, (imagey + iheight) * size + msize, right - left, msize2);
 			}
-//topleft large
+			//topleft large
 			if (imagex > 0 && imagex <= max2 && imagey > 0 && imagey <= max2) {
 				left = imagex * size - size;
 				top = imagey * size - size;
@@ -358,7 +372,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.fillRect(left + msize, top + msize, msize3, msize2);
 				g.fillRect(left + msize, top + msize3, msize2, msize);
 			}
-//topright large
+			//topright large
 			if (imagex >= 0 - iwidth && imagex < max2 - iwidth && imagey > 0 && imagey <= max2) {
 				left = (imagex + iwidth) * size;
 				top = imagey * size - size;
@@ -370,7 +384,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.fillRect(left, top + msize, msize3, msize2);
 				g.fillRect(left + msize, top + msize3, msize2, msize);
 			}
-//bottomleft large
+			//bottomleft large
 			if (imagex > 0 && imagex <= max2 && imagey >= 0 - iheight && imagey < max2 - iheight) {
 				left = imagex * size - size;
 				top = (imagey + iheight) * size;
@@ -382,7 +396,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.fillRect(left + msize, top + msize, msize3, msize2);
 				g.fillRect(left + msize, top, msize2, msize);
 			}
-//bottomright large
+			//bottomright large
 			if (imagex >= 0 - iwidth && imagex < max2 - iwidth && imagey >= 0 - iheight && imagey < max2 - iheight) {
 				left = (imagex + iwidth) * size;
 				top = (imagey + iheight) * size;
@@ -395,13 +409,13 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.fillRect(left + msize, top, msize2, msize);
 			}
 		}
-//movement box shadow
+		//movement box shadow
 		g.setColor(new Color(0, 0, 0, 128));
 		g.fillRect(100, 400, 200, -min);
 		g.fillRect(100, 400 - min, -min, max2);
 		g.fillRect(max + 100, 400 - min, -min, max2);
 		g.fillRect(100, 400 + max, 200, -min);
-//other panel
+		//other panel
 		if (panelnum != 0) {
 			try {
 				paint.invoke(panel, g);
@@ -409,8 +423,8 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				System.out.println("" + e);
 				e.printStackTrace();
 			}
-//main panel
-//color selection
+		//main panel
+		//color selection
 		} else {
 			g.drawImage(panelimage, 0, 0, null);
 			g.setColor(new Color(red, green, blue, alpha));
@@ -424,7 +438,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			g.drawRect(452, 420 - (blue + 8) / 16 * 20, 19, 19);
 			g.drawRect(477, 421 - (alpha + 8) / 16 * 20, 17, 17);
 			g.drawRect(476, 420 - (alpha + 8) / 16 * 20, 19, 19);
-//draw option
+			//draw option
 			if (action < 4) {
 				g.drawRect(411, 429 + action * 35, 76, 31);
 				g.drawRect(410, 428 + action * 35, 78, 33);
@@ -433,10 +447,11 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.drawRect(309, 264 + action * 35, 76, 31);
 				g.drawRect(308, 263 + action * 35, 78, 33);
 			}
-//show copy/cut red rect, or paste image
+			//show copy/cut red rect
 			if ((action == 4 || action == 5) && clicked && inbounds) {
 				g.setColor(new Color(255, 0, 0, 128));
 				g.fillRect((copyleft + imagex) * size, (copytop + imagey) * size, (copyright - copyleft) * size, (copybottom - copytop) * size);
+			//show paste image
 			} else if (action == 6 && clicked && copyimage != null && inbounds) {
 				int pixel = 0;
 				int cwidth = copyimage.getWidth();
@@ -449,7 +464,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					}
 				}
 			}
-//hiding undo/redo
+			//hiding undo/redo
 			if (undo == null) {
 				g.setColor(new Color(255, 192, 0, 192));
 				g.fillRect(0, 505, 35, 20);
@@ -458,7 +473,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.setColor(new Color(255, 192, 0, 192));
 				g.fillRect(40, 505, 35, 20);
 			}
-//what's getting clicked on
+			//what's getting clicked on
 			if (greenrect) {
 				g.setColor(new Color(0, 255, 0, 128));
 				if (origin == 101)
@@ -495,7 +510,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					g.fillRect(78, 505, 19, 19);
 			}
 		}
-//stats
+		//stats
 		if (statson) {
 			g.setFont(new Font("Monospaced", Font.BOLD, 12));
 			g.setColor(new Color(64, 64, 64));
@@ -519,14 +534,15 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			g.setColor(Color.WHITE);
 			g.drawString(alpha + "", 77, 597);
 		}
-//options "panel"
+		//options "panel"
 		if (showoptions)
 			optionspaintComponent(g);
-//panels "panel"
+		//panels "panel"
 		else if (showpanels)
 			panelspaintComponent(g);
 	}
 	public void mousePressed(MouseEvent evt) {
+		//try to click, but if it runs out of memory, clear the event history
 		try {
 			clickaction(evt);
 		} catch(OutOfMemoryError e) {
@@ -540,6 +556,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		}
 	}
 	public void mouseReleased(MouseEvent evt) {
+		//try to unclick, but if it runs out of memory, clear the event history
 		try {
 			safemouseReleased(evt);
 		} catch(OutOfMemoryError e) {
@@ -563,40 +580,45 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				e.printStackTrace();
 			}
 		} else if (clicked && inbounds) {
-//finished selecting copy/cut area
+			//finished selecting copy/cut area
+			//copy
 			if (action == 4)
 				copyimage = imagecopy(mainimage.getSubimage(copyleft, copytop, copyright - copyleft, copybottom - copytop));
+			//cut
 			else if (action == 5) {
 				int cwidth = copyright - copyleft;
 				int cheight = copybottom - copytop;
 				copyimage = imagecopy(mainimage.getSubimage(copyleft, copytop, cwidth, cheight));
-//Type 6: cut: [x, y] [image]
+				//Type 6: cut: [x, y] [image]
 				redo = null;
 				undo = new Link(6, undo);
 				undo.ints = new int[] {copyleft, copytop};
 				undo.image = imagecopy(copyimage);
 				mainimage.setRGB(copyleft, copytop, cwidth, cheight, new int[cwidth * cheight], 0, cwidth);
-//ready to paste the image
+			//ready to paste the image
 			} else if (action == 6) {
 				int cwidth = copyimage.getWidth();
 				int cheight = copyimage.getHeight();
 				if (mainimage != null) {
 					if (copyleft < 0 || copyright > mainimage.getWidth() || copytop < 0 || copybottom > mainimage.getHeight()) {
-//Type 7: paste + resize: [oldw, oldh, oldx, oldy, pastew, pasteh, pastex, pastey] [placeimage]
+						//get the information about the subimages
 						int mwidth = mainimage.getWidth();
 						int mheight = mainimage.getHeight();
 						int posleft = Math.max(0, copyleft);
 						int postop = Math.max(0, copytop);
 						int negleft = Math.max(0, -copyleft);
 						int negtop = Math.max(0, -copytop);
+						//Type 7: paste + resize: [oldw, oldh, oldx, oldy, pastew, pasteh, pastex, pastey] [placeimage]
 						redo = null;
 						undo = new Link(7, undo);
 						undo.ints = new int[] {mwidth, mheight, negleft, negtop, cwidth, cheight, posleft, postop};
+						//save the bit of image that got overwritten
 						if (copyleft < mwidth && copytop < mheight && copyright > 0 && copybottom > 0) {
 							int poswidth = Math.min(mwidth, copyright) - posleft;
 							int posheight = Math.min(mheight, copybottom) - postop;
 							undo.image = imagecopy(mainimage.getSubimage(posleft, postop, poswidth, posheight));
 						}
+						//form the new image
 						BufferedImage tempimage = new BufferedImage(Math.max(copyright, mwidth) - Math.min(copyleft, 0), Math.max(copybottom, mheight) - Math.min(copytop, 0), BufferedImage.TYPE_INT_ARGB);
 						tempimage.setData(mainimage.getRaster().createTranslatedChild(negleft, negtop));
 						pasteon(copyimage, posleft, postop, tempimage);
@@ -604,7 +626,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						imagex = imagex - negleft;
 						imagey = imagey - negtop;
 					} else {
-//Type 6: paste: [x, y] [image]
+						//Type 6: paste: [x, y] [image]
 						redo = null;
 						undo = new Link(6, undo);
 						undo.ints = new int[] {copyleft, copytop};
@@ -612,7 +634,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						pasteon(copyimage, copyleft, copytop, mainimage);
 					}
 				} else {
-//Type 8: paste + new image: -
+					//Type 8: paste + new image: -
 					redo = null;
 					undo = new Link(8, undo);
 					mainimage = imagecopy(copyimage);
@@ -625,6 +647,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		repaint();
 	}
 	public void mouseDragged(MouseEvent evt) {
+		//try to click, but if it runs out of memory, clear the event history
 		try {
 			clickaction(evt);
 		} catch(OutOfMemoryError e) {
@@ -641,8 +664,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 	public void mouseClicked(MouseEvent evt) {}
 	public void mouseEntered(MouseEvent evt) {}
 	public void mouseExited(MouseEvent evt) {}
+	//draw the background
 	public void bgsetup(Graphics g) {
-//backgrounds
+		//backgrounds
 		g.setColor(backcolor);
 		g.fillRect(0, 0, 400, 400);
 		if (Xs != 0) {
@@ -664,7 +688,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		}
 		g.setColor(new Color(128, 128, 128));
 		g.fillRect(100, 400, 200, 200);
-//switch panels button
+		//switch panels button
 		g.setColor(Color.WHITE);
 		g.fillRect(400, 442, 100, 19);
 		g.setColor(Color.BLACK);
@@ -673,8 +697,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.setFont(new Font("Monospaced", Font.BOLD, 12));
 		g.drawString("Switch Panels", 405, 456);
 	}
+	//draw the main panel
 	public void setup(Graphics g) {
-//color selection
+		//color selection
 		int level = 0;
 		for (int y = 422; y >= 122; y -= 20) {
 			g.setColor(new Color(level << 16));
@@ -708,7 +733,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.fillRect(454, 102, 16, 16);
 		g.setColor(Color.WHITE);
 		g.fillRect(478, 102, 16, 16);
-//color display square
+		//color display square
 		for (int count = 0; count < 9; count += 1) {
 			g.setColor(new Color(count * 16, count * 16, count * 16));
 			g.drawRect(425 - count, 25 - count, 49 + 2 * count, 49 + 2 * count);
@@ -725,7 +750,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.fillRect(456, 56, 6, 6);
 		g.fillRect(432, 62, 6, 6);
 		g.fillRect(462, 62, 6, 6);
-//draw tools and such
+		//draw tools and such
 		g.setColor(Color.BLUE);
 		g.fillRect(412, 465, 75, 30);
 		g.fillRect(412, 500, 75, 30);
@@ -780,7 +805,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.setColor(Color.WHITE);
 		g.drawString("Import", 8, 454);
 		g.drawString("Options", 3, 489);
-//undo
+		//undo
 		g.fillRect(7, 514, 21, 2);
 		g.drawLine(8, 516, 12, 520);
 		g.drawLine(8, 513, 12, 509);
@@ -788,7 +813,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(9, 513, 13, 509);
 		g.drawLine(10, 516, 13, 519);
 		g.drawLine(10, 513, 13, 510);
-//redo
+		//redo
 		g.fillRect(47, 514, 21, 2);
 		g.drawLine(62, 509, 66, 513);
 		g.drawLine(62, 520, 66, 516);
@@ -796,7 +821,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(61, 520, 65, 516);
 		g.drawLine(61, 510, 64, 513);
 		g.drawLine(61, 519, 64, 516);
-//store button
+		//store button
 		g.drawLine(81, 508, 85, 512);
 		g.drawLine(89, 516, 93, 520);
 		g.drawLine(81, 520, 85, 516);
@@ -810,32 +835,32 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.fillRect(85, 517, 1, 3);
 		g.fillRect(89, 517, 1, 3);
 		g.fillRect(87, 514, 1, 1);
-//copyimage changing
-//rotate
-//g.drawArc(PosX, PosY, Width, Height, StartAngle, ExtendAngle)
+		//copyimage changing
+		//rotate
+		//g.drawArc(PosX, PosY, Width, Height, StartAngle, ExtendAngle)
 		g.drawArc(314, 514, 10, 10, 0, 270);
 		g.drawLine(324, 520, 326, 518);
 		g.drawLine(324, 520, 322, 518);
-//vertical flip
+		//vertical flip
 		g.drawLine(345, 515, 345, 525);
 		g.drawLine(345, 515, 343, 517);
 		g.drawLine(345, 515, 347, 517);
 		g.drawLine(345, 525, 343, 523);
 		g.drawLine(345, 525, 347, 523);
-//horizontal flip
+		//horizontal flip
 		g.drawLine(365, 520, 375, 520);
 		g.drawLine(365, 520, 367, 518);
 		g.drawLine(365, 520, 367, 522);
 		g.drawLine(375, 520, 373, 518);
 		g.drawLine(375, 520, 373, 522);
-//nudging
-//nudge background
+		//nudging
+		//nudge background
 		g.setColor(Color.BLUE);
 		g.fillRect(320, 540, 48, 48);
 		g.setColor(Color.GREEN);
 		g.drawLine(320, 540, 367, 587);
 		g.drawLine(320, 587, 367, 540);
-//nudge up
+		//nudge up
 		g.setColor(new Color(192, 192, 192));
 		g.fillRect(343, 542, 2, 17);
 		g.drawLine(345, 543, 349, 547);
@@ -844,7 +869,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(342, 544, 338, 548);
 		g.drawLine(345, 545, 348, 548);
 		g.drawLine(342, 545, 339, 548);
-//nudge right
+		//nudge right
 		g.fillRect(349, 563, 17, 2);
 		g.drawLine(360, 558, 364, 562);
 		g.drawLine(360, 569, 364, 565);
@@ -852,7 +877,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(359, 569, 363, 565);
 		g.drawLine(359, 559, 362, 562);
 		g.drawLine(359, 568, 362, 565);
-//nudge down
+		//nudge down
 		g.fillRect(343, 569, 2, 17);
 		g.drawLine(349, 580, 345, 584);
 		g.drawLine(338, 580, 342, 584);
@@ -860,7 +885,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(338, 579, 342, 583);
 		g.drawLine(348, 579, 345, 582);
 		g.drawLine(339, 579, 342, 582);
-//nudge left
+		//nudge left
 		g.fillRect(322, 563, 17, 2);
 		g.drawLine(323, 565, 327, 569);
 		g.drawLine(323, 562, 327, 558);
@@ -869,12 +894,14 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawLine(325, 565, 328, 568);
 		g.drawLine(325, 562, 328, 559);
 	}
+	//click on the screen
+	//origin: where the mouse was originally clicked
 	public void clickaction(MouseEvent evt) {
 		int mousex = evt.getX();
 		int mousey = evt.getY();
 		int posx = 0;
 		int posy = 0;
-//defer to options "panel"
+		//defer to options "panel"
 		if (showoptions) {
 			if (origin == 0) {
 				evt.translatePoint(-165, -165);
@@ -884,7 +911,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					showoptions = false;
 				origin = -1;
 			}
-//defere to panels "panel"
+		//defere to panels "panel"
 		} else if (showpanels) {
 			if (origin == 0) {
 				int panelsize = panels.length * 15 + 40;
@@ -895,11 +922,11 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					showpanels = false;
 				origin = -1;
 			}
-//switch panels
+		//switch panels
 		} else if (mousex >= 400 && mousex < 500 && mousey >= 442 && mousey < 461 && origin == 0) {
 			showpanels = true;
 			origin = -1;
-//drag the image
+		//drag the image
 		} else if (mousex >= 100 && mousex < 300 && mousey >= 400 && mousey < 600 && (origin == 0 || origin == 4)) {
 			if (origin == 4) {
 				imagex = movex + mousex;
@@ -909,7 +936,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				movey = imagey - mousey;
 				origin = 4;
 			}
-//defer to other panel
+		//defer to other panel
 		} else if (panelnum != 0) {
 			try {
 				click.invoke(panel, evt);
@@ -917,41 +944,44 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				System.out.println("" + e);
 				e.printStackTrace();
 			}
-//main area
+		//main area
 		} else if (mousex >= 0 && mousex < 400 && mousey >= 0 && mousey < 400 && (origin == 0 || origin == 1)) {
 			origin = 1;
 			posx = mousex / size;
 			posy = mousey / size;
-//draw
+			//draw
 			if (action == 1) {
 				if (mainimage != null) {
 					int colorx = posx - imagex;
 					int colory = posy - imagey;
+					//resize the image to paint the pixel
 					if (colorx < 0 || colorx >= mainimage.getWidth() || colory < 0 || colory >= mainimage.getHeight()) {
-//Type 2: draw + resize: [oldw, oldh, oldx, oldy, drawx, drawy]
 						int placex = Math.max(0, -colorx);
 						int placey = Math.max(0, -colory);
 						int mwidth = mainimage.getWidth();
 						int mheight = mainimage.getHeight();
+						//Type 2: draw + resize: [oldw, oldh, oldx, oldy, drawx, drawy]
 						redo = null;
 						undo = new Link(2, undo);
 						colorx = Math.max(0, colorx);
 						colory = Math.max(0, colory);
 						undo.ints = new int[] {mwidth, mheight, placex, placey, colorx, colory};
+						//convert the image
 						BufferedImage tempimage = new BufferedImage(Math.max(mwidth + placex, colorx + 1), Math.max(mheight + placey, colory + 1), BufferedImage.TYPE_INT_ARGB);
 						tempimage.setData(mainimage.getRaster().createTranslatedChild(placex, placey));
 						mainimage = tempimage;
 						imagex = Math.min(imagex, posx);
 						imagey = Math.min(imagey, posy);
+					//store undo information if the color changes
 					} else if (mainimage.getRGB(colorx, colory) != (alpha << 24 | red << 16 | green << 8 | blue)) {
-//Type 1: draw: [x, y, oldcolor]
+						//Type 1: draw: [x, y, oldcolor]
 						redo = null;
 						undo = new Link(1, undo);
 						undo.ints = new int[] {colorx, colory, mainimage.getRGB(colorx, colory)};
 					}
 					mainimage.setRGB(colorx, colory, alpha << 24 | red << 16 | green << 8 | blue);
 				} else {
-//Type 3: draw + new image: -
+					//Type 3: draw + new image: -
 					redo = null;
 					undo = new Link(3, undo);
 					mainimage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -959,8 +989,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					imagey = posy;
 					mainimage.setRGB(0, 0, alpha << 24 | red << 16 | green << 8 | blue);
 				}
-//erase
+			//erase
 			} else if (action == 2 && mainimage != null) {
+				//only bother doing erasing if you click inside the image
 				if (posx >= imagex && posx < mainimage.getWidth() + imagex && posy >= imagey && posy < mainimage.getHeight() + imagey) {
 					int colorx = posx - imagex;
 					int colory = posy - imagey;
@@ -971,6 +1002,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					int up = 0;
 					int down = mheight;
 					boolean leave = false;
+					//find the top opaque pixel
 					for (int y = 0; y < mheight; y += 1) {
 						for (int x = 0; x < mwidth; x += 1) {
 							if ((mainimage.getRGB(x, y) >> 24 & 255) > 0 && (x != colorx || y != colory)) {
@@ -982,8 +1014,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						if (leave)
 							break;
 					}
+					//the image is empty
 					if (!leave) {
-//Type 5: erase + nullify: [imagex, imagey, size] [image]
+						//Type 5: erase + nullify: [imagex, imagey, size] [image]
 						redo = null;
 						undo = new Link(5, undo);
 						undo.ints = new int[] {imagex, imagey, size};
@@ -994,6 +1027,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						return;
 					}
 					leave = false;
+					//find the bottom opaque pixel
 					for (int y = mheight - 1; y >= 0; y -= 1) {
 						for (int x = mwidth - 1; x >= 0; x -= 1) {
 							if ((mainimage.getRGB(x, y) >> 24 & 255) > 0 && (x != colorx || y != colory)) {
@@ -1006,6 +1040,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 							break;
 					}
 					leave = false;
+					//find the left opaque pixel
 					for (int x = 0; x < mwidth; x += 1) {
 						for (int y = 0; y < mheight; y += 1) {
 							if ((mainimage.getRGB(x, y) >> 24 & 255) > 0 && (x != colorx || y != colory)) {
@@ -1018,6 +1053,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 							break;
 					}
 					leave = false;
+					//find the right opaque pixel
 					for (int x = mwidth - 1; x >= 0; x -= 1) {
 						for (int y = mheight - 1; y >= 0; y -= 1) {
 							if ((mainimage.getRGB(x, y) >> 24 & 255) > 0 && (x != colorx || y != colory)) {
@@ -1029,23 +1065,28 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						if (leave)
 							break;
 					}
+					//some areas are getting removed
 					if (left != 0 || right != mwidth || up != 0 || down != mheight) {
-//Type 4: erase + resize: [oldw, oldh, placex, placey, colorx, colory, oldcolor] [links:[x, y] [image]]
+						//Type 4: erase + resize: [oldw, oldh, placex, placey, colorx, colory, oldcolor] [links:[x, y] [image]]
+						//chop off the left side
 						if (left != 0) {
 							undo = new Link(0, undo);
 							undo.ints = new int[] {0, 0};
 							undo.image = imagecopy(mainimage.getSubimage(0, 0, left, mheight));
 						}
+						//chop off the right side
 						if (right != mwidth) {
 							undo = new Link(0, undo);
 							undo.ints = new int[] {right, 0};
 							undo.image = imagecopy(mainimage.getSubimage(right, 0, mwidth - right, mheight));
 						}
+						//chop off the top side
 						if (up != 0) {
 							undo = new Link(0, undo);
 							undo.ints = new int[] {left, 0};
 							undo.image = imagecopy(mainimage.getSubimage(left, 0, right - left, up));
 						}
+						//chop off the bottom side
 						if (down != mheight) {
 							undo = new Link(0, undo);
 							undo.ints = new int[] {left, down};
@@ -1058,17 +1099,20 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						mainimage = imagecopy(mainimage.getSubimage(left, up, right - left, down - up));
 						imagex = imagex + left;
 						imagey = imagey + up;
+					//no areas removed
 					} else if (mainimage.getRGB(colorx, colory) != 0) {
-//Type 1: erase: [x, y, oldcolor]
+						//Type 1: erase: [x, y, oldcolor]
 						redo = null;
 						undo = new Link(1, undo);
 						undo.ints = new int[] {colorx, colory, mainimage.getRGB(colorx, colory)};
 						mainimage.setRGB(colorx, colory, 0);
 					}
 				}
-//absorb
+			//absorb
 			} else if (action == 3 && mainimage != null) {
+				//check that the spot is within the image bounds
 				if (posx >= imagex && posx < mainimage.getWidth() + imagex && posy >= imagey && posy < mainimage.getHeight() + imagey) {
+					//don't absorb transparent pixels
 					if ((mainimage.getRGB(posx - imagex, posy - imagey) >> 24 & 255) > 0) {
 						alpha = mainimage.getRGB(posx - imagex, posy - imagey) >> 24 & 255;
 						red = mainimage.getRGB(posx - imagex, posy - imagey) >> 16 & 255;
@@ -1076,8 +1120,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 						blue = mainimage.getRGB(posx - imagex, posy - imagey) & 255;
 					}
 				}
-//cutting + copying
+			//cutting + copying
 			} else if ((action == 4 || action == 5) && mainimage != null) {
+				//check if it's a click or drag
 				if (!clicked) {
 					clicked = true;
 					initialy = posy;
@@ -1085,49 +1130,52 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				}
 				finaly = posy;
 				finalx = posx;
+				//get the bounds of the copy image
 				copyleft = Math.min(Math.max(Math.min(initialx, finalx) - imagex, 0), mainimage.getWidth() - 1);
 				copyright = Math.max(Math.min(Math.max(initialx, finalx) + 1 - imagex, mainimage.getWidth()), 1);
 				copytop = Math.min(Math.max(Math.min(initialy, finaly) - imagey, 0), mainimage.getHeight() - 1);
 				copybottom = Math.max(Math.min(Math.max(initialy, finaly) + 1 - imagey, mainimage.getHeight()), 1);
 				inbounds = true;
-//pasting
+			//pasting
 			} else if (action == 6 && copyimage != null) {
 				clicked = true;
+				//ged the bounds of where the copy image goes
 				copytop = posy - imagey;
 				copyleft = posx - imagex;
 				copybottom = copytop + copyimage.getHeight();
 				copyright = copyleft + copyimage.getWidth();
 				inbounds = true;
 			}
-//select draw
+		//select draw
 		} else if (mousex >= 412 && mousex < 487 && mousey >= 465 && mousey < 495 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 1;
-//select erase
+		//select erase
 		} else if (mousex >= 412 && mousex < 487 && mousey >= 500 && mousey < 530 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 2;
-//select absorb
+		//select absorb
 		} else if (mousex >= 412 && mousex < 487 && mousey >= 535 && mousey < 565 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 3;
-//select copy
+		//select copy
 		} else if (mousex >= 310 && mousex < 385 && mousey >= 405 && mousey < 435 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 4;
-//select cut
+		//select cut
 		} else if (mousex >= 310 && mousex < 385 && mousey >= 440 && mousey < 470 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 5;
-//select paste
+		//select paste
 		} else if (mousex >= 310 && mousex < 385 && mousey >= 475 && mousey < 505 && (origin == 0 || origin == 2)) {
 			origin = 2;
 			action = 6;
-//change color selection
+		//change color selection
 		} else if (mousex >= 406 && mousex < 494 && (mousex - 406) % 24 < 16 && mousey >= 102 && mousey < 438 && (mousey - 102) % 20 < 16 && (origin == 0 || origin == 3)) {
 			origin = 3;
 			posx = (mousex - 406) / 24;
 			posy = (mousey - 102) / 20;
+			//find which part is getting changed, then find what the new level is
 			if (posx == 0) {
 				if (posy == 0) {
 					red = 255;
@@ -1153,21 +1201,21 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					alpha = 256 - 16 * posy;
 				}
 			}
-//save
+		//save
 		} else if (mousex >= 400 && mousex < 500 && mousey >= 570 && mousey < 600 && origin == 0 && mainimage != null)
 			done = 1;
-//reset
+		//reset
 		else if (mousex >= 0 && mousex < 75 && mousey >= 400 && mousey < 430 && origin == 0) {
 			imagex = 0;
 			imagey = 0;
 			origin = 101;
 			greenrect = true;
-//import
+		//import
 		} else if (mousex >= 0 && mousex < 75 && mousey >= 435 && mousey < 465 && origin == 0) {
 			done = 2;
 			origin = 102;
 			greenrect = true;
-//rotate
+		//rotate
 		} else if (mousex >= 310 && mousex < 330 && mousey >= 510 && mousey < 530 && origin == 0 && copyimage != null) {
 			int cwidth = copyimage.getWidth();
 			int cheight = copyimage.getHeight();
@@ -1180,7 +1228,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			copyimage = tempimage;
 			origin = 103;
 			greenrect = true;
-//vertical flip
+		//vertical flip
 		} else if (mousex >= 335 && mousex < 355 && mousey >= 510 && mousey < 530 && origin == 0 && copyimage != null) {
 			int cwidth = copyimage.getWidth();
 			int cheight = copyimage.getHeight();
@@ -1193,7 +1241,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			copyimage = tempimage;
 			origin = 104;
 			greenrect = true;
-//horizontal flip
+		//horizontal flip
 		} else if (mousex >= 360 && mousex < 380 && mousey >= 510 && mousey < 530 && origin == 0 && copyimage != null) {
 			int cwidth = copyimage.getWidth();
 			int cheight = copyimage.getHeight();
@@ -1206,7 +1254,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			copyimage = tempimage;
 			origin = 105;
 			greenrect = true;
-//nudge
+		//nudge
 		} else if (mousex >= 320 && mousex < 368 && mousey >= 540 && mousey < 588 && origin == 0) {
 			posx = mousex - 320;
 			posy = mousey - 540;
@@ -1228,25 +1276,25 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				}
 			}
 			greenrect = true;
-//options
+		//options
 		} else if (mousex >= 0 && mousex < 75 && mousey >= 470 && mousey < 500 && origin == 0) {
 			showoptions = true;
 			origin = -1;
-//undo
+		//undo
 		} else if (mousex >= 0 && mousex < 35 && mousey >= 505 && mousey < 525 && undo != null && origin == 0) {
 			undo();
 			origin = 110;
 			greenrect = true;
-//redo
+		//redo
 		} else if (mousex >= 40 && mousex < 75 && mousey >= 505 && mousey < 525 && redo != null && origin == 0) {
 			redo();
 			origin = 111;
 			greenrect = true;
+		//store image
 		} else if (mousex >= 78 && mousex < 97 && mousey >= 505 && mousey < 524 && origin == 0) {
-//store image + color
-//Type 9: switch images: [imagex, imagey, size] [image]
 			origin = 112;
 			if (mainimage != null) {
+				//Type 9: switch images: [imagex, imagey, size] [image]
 				undo = new Link(9, undo);
 				undo.ints = new int[] {imagex, imagey, size};
 				undo.image = imagecopy(mainimage);
@@ -1257,6 +1305,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		repaint();
 	}
 	public void mouseWheelMoved(MouseWheelEvent evt) {
+		//try to scroll, but if it runs out of memory, clear the event history
 		try{
 			safemouseWheelMoved(evt);
 		} catch(OutOfMemoryError e) {
@@ -1273,6 +1322,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		int mousex = evt.getX();
 		int mousey = evt.getY();
 		int add = evt.getWheelRotation();
+		//defer to other panel
 		if (panelnum != 0) {
 			try {
 				scroll.invoke(panel, evt);
@@ -1280,6 +1330,8 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				System.out.println("" + e);
 				e.printStackTrace();
 			}
+		//scroll on one of the color selection columns
+		//change the value by the scroll amoung
 		} else if (mousex >= 406 && mousex < 494 && (mousex - 406) % 24 < 16 && mousey >= 102 && mousey < 438 && origin == 0) {
 			int posx = (mousex - 406) / 24;
 			if (posx == 0 && red - add < 256 && red - add >= 0)
@@ -1290,11 +1342,13 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				blue = blue - add;
 			else if (posx == 3 && alpha - add <= 255 && alpha - add >= 0)
 				alpha = alpha - add;
+		//scroll in the main area, undo or redo
 		} else if (mousex >= 0 && mousex < 400 && mousey >= 0 && mousey < 400 && origin == 0) {
 			if (add == 1 && undo != null)
 				undo();
 			else if (add == -1 && redo != null)
 				redo();
+		//scroll in the nudge area, nudge in the direction
 		} else if (mousex >= 320 && mousex < 368 && mousey >= 540 && mousey < 588 && origin == 0) {
 			int posx = mousex - 320;
 			int posy = mousey - 540;
@@ -1354,6 +1408,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			imagex = imagex - undo.ints[2];
 			imagey = imagey - undo.ints[3];
 			undo = undo.next;
+			//restore any transparent pixels
 			while (undo != null && undo.type == 0) {
 				mainimage.setData(undo.image.getRaster().createTranslatedChild(undo.ints[0], undo.ints[1]));
 				undo = undo.next;
@@ -1453,6 +1508,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			int right = left + redo.ints[0];
 			int up = redo.ints[3];
 			int down = up + redo.ints[1];
+			//remove transparent areas
 			if (left != 0) {
 				undo = new Link(0, undo);
 				undo.ints = new int[] {0, 0};
@@ -1511,6 +1567,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			int rheight = redo.image.getHeight();
 			undo = new Link(7, undo);
 			undo.ints = new int[] {mwidth, mheight, redo.ints[2], redo.ints[3], rwidth, rheight, redo.ints[4], redo.ints[5]};
+			//restore old image
 			if (redo.ints[4] < mwidth + redo.ints[2] && redo.ints[5] < mheight + redo.ints[3] && redo.ints[4] + rwidth > redo.ints[2] && redo.ints[5] + rheight > redo.ints[3]) {
 				int swidth = Math.min(mwidth - redo.ints[4], rwidth - redo.ints[2]);
 				int sheight = Math.min(mheight - redo.ints[5], rheight - redo.ints[3]);
@@ -1545,6 +1602,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			redo = redo.next;
 		}
 	}
+	//create a copy of the image
 	public static BufferedImage imagecopy(BufferedImage img) {
 		if (img == null)
 			return null;
@@ -1552,6 +1610,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		temp.setData(img.getRaster());
 		return temp;
 	}
+	//algorithm to paste one image on top of another
 	public static void pasteon(BufferedImage a, int lx, int ly, BufferedImage b) {
 		int pa = 0;
 		int pb = 0;
@@ -1583,6 +1642,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			}
 		}
 	}
+	//draw the options panel
 	public void optionspaintComponent(Graphics g) {
 		g.setColor(new Color(0, 0, 0, 128));
 		g.fillRect(0, 0, 500, 160);
@@ -1596,7 +1656,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawRect(161, 161, 177, 277);
 		g.drawRect(160, 160, 179, 279);
 		g.setColor(new Color(255, 192, 0));
-//height = 15 * (16)rows + 10 + 20(save)
+		//height = 15 * (16)rows + 10 + 20(save)
 		g.fillRect(165, 165, 170, 270);
 		g.translate(165, 185);
 		g.setColor(new Color(128, 0, 0));
@@ -1665,8 +1725,10 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.fillRect(22, 84 + 15 * Xs, 4, 4);
 		g.fillRect(22, 249 - 15 * (size / 4), 4, 4);
 	}
+	//handle clicking for the options panel
 	public void optionsmousePressed(MouseEvent evt) {
 		int posy = evt.getY();
+		//save the options
 		if (posy >= 5 && posy < 25) {
 			try {
 				filer.newfile();
@@ -1686,6 +1748,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			} catch(Exception e) {
 				System.out.println("Sorry, an error occured:\n" + e + "\nYour file could not be saved.");
 			}
+		//clicked an option
 		} else {
 			posy = (evt.getY() - 24) / 15;
 			switch(posy) {
@@ -1742,6 +1805,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			repaint();
 		}
 	}
+	//draw the panels panel
 	public void panelspaintComponent(Graphics g) {
 		int panelsize = panels.length * 15 + 40;
 		g.setColor(new Color(0, 0, 0, 128));
@@ -1774,6 +1838,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		}
 		g.fillRect(22, 24 + 15 * panelnum, 4, 4);
 	}
+	//choose a panel to use
 	public void panelsmousePressed(MouseEvent evt) {
 		int posy = (evt.getY() - 4) / 15 - 1;
 		if (posy >= 0 && posy <= panels.length) {
