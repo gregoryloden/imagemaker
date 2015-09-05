@@ -1,0 +1,38 @@
+/*
+Image Maker Alternate Panel Template
+
+ This is a template containing all of the requirements to get recognized by the Image Maker.
+ An Image Maker alternate panel must contain the following:
+- a constructor that takes an imagemaker for the panel to interact with
+- a paint method for the panel to draw on the Image Maker
+- a click method to respond to mouse clicks and drags
+- a release method to respond to mouse releases
+- a scroll moethod to respond to mouse scrolls
+- a name method for the panel's name
+ All of this is provided in the code template below. To get the code to compile, have the .java file
+and the imagemaker.class file be in the same directory
+
+ The alternate panel has access to the following variables:
+- mainimage: the main image currently being edited
+- copyimage: a secondary image used to modify the main image
+- imagex, imagey: the x and y coordinates of the main image relative to the top left corner of the
+    draw screen
+- red, green, blue, alpha: the four different components of the Image Maker's color selection
+*/
+import java.awt.Graphics;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+public class _ {
+	public String name() {
+	}
+	public _(imagemaker main) {
+	}
+	public void paint(Graphics g) {
+	}
+	public void click(MouseEvent evt) {
+	}
+	public void release(MouseEvent evt) {
+	}
+	public void scroll(MouseWheelEvent evt) {
+	}
+}
