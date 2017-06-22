@@ -9,15 +9,19 @@ Image Maker Alternate Panel Template
 - a release method to respond to mouse releases
 - a scroll moethod to respond to mouse scrolls
 - a name method for the panel's name
- All of this is provided in the code template below. To get the code to compile, have the .java file
-and the imagemaker.class file be in the same directory
+ All of this is provided in the code template below.
 
  The alternate panel has access to the following variables:
+BufferedImage:
+
 - mainimage: the main image currently being edited
 - copyimage: a secondary image used to modify the main image
+
+int:
 - imagex, imagey: the x and y coordinates of the main image relative to the top left corner of the
     draw screen
 - red, green, blue, alpha: the four different components of the Image Maker's color selection
+- size: the size of the boxes (in pixels) that represent pixels in the image
 */
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;

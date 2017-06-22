@@ -1,26 +1,16 @@
-//Version 3
-import javax.swing.JPanel;
-import javax.swing.JFrame;
-import java.awt.Graphics;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.HierarchyBoundsListener;
-import java.awt.event.HierarchyEvent;
-import java.io.File;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.lang.reflect.Method;
-import java.awt.Insets;
-import java.awt.Dimension;
-import java.util.Scanner;
-import java.awt.Toolkit;
+//Version 3.2
+//to fix- pasting large images
+import Gstuff.Filer;
+import Gstuff.stuff;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.*;
+import javax.imageio.*;
+import javax.swing.*;
+import javax.swing.filechooser.*;
 public class imagemaker extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, HierarchyBoundsListener {
 	public static int screenwidth() {
 		return Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -28,29 +18,20 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 	public static int screenheight() {
 		return Toolkit.getDefaultToolkit().getScreenSize().height;
 	}
-	public static String line() {
-		Scanner scan = new Scanner(System.in);
-		return scan.nextLine();
-	}
 	public static int readint(String line) {
-		int digit = -1;
 		int number = 0;
 		boolean negative = false;
-		int pos = 0;
 		int length = line.length();
-		while (pos < length) {
-			digit = (int)(line.charAt(pos));
-			if (digit >= 48 && digit < 58)
-				number = number * 10 + (digit - 48);
-			else if (digit == 45 && number == 0)
+		for (int pos = 0; pos < length; pos += 1) {
+			char digit = line.charAt(pos);
+			if (digit >= '0' && digit <= '9')
+				number = number * 10 + (int)(digit) - 48;
+			else if (digit == '-' && number == 0)
 				negative = true;
-			pos = pos + 1;
 		}
-		if (negative)
-			return -number;
-		return number;
+		return negative ? -number : number;
 	}
-	private static Filer filer = new Filer("options.txt");
+	private Filer filer = new Filer("imoptions.txt");
 	private byte done = 0;
 	public BufferedImage mainimage = null;
 	public BufferedImage copyimage = null;
@@ -106,24 +87,36 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 	private Color displaycolor = standarddisplaycolor;
 	private int optionsize = 390;
 	private int panelsize;
+	private File destFile = null;
 //getters
 	public int getsize() {return size;}
-	public int innerwidth() {return Math.max(400, width - 100);}
-	public int innerheight() {return Math.max(400, height - 200);}
+	public int innerwidth() {return width - 100;}
+	public int innerheight() {return height - 200;}
 	public static void main(String[] args) {
-		imagemaker thepanel = new imagemaker();
+		imagemaker thepanel;
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			thepanel = new imagemaker();
+		} catch(Exception e) {
+			e.printStackTrace();
+			return;
+		}
 		String filename = "";
 		//load image file
 		if (args.length > 0) {
 			filename = args[0];
-			try{
-				BufferedImage theimage = ImageIO.read(new File("images/" + filename + ".png"));
+			thepanel.destFile = new File("images/" + filename + ".png");
+			if (!thepanel.destFile.exists())
+				thepanel.destFile = new File("images/" + filename);
+			try {
+				BufferedImage theimage = ImageIO.read(thepanel.destFile);
 				int twidth = theimage.getWidth();
 				int theight = theimage.getHeight();
 				thepanel.mainimage = new BufferedImage(twidth, theight, BufferedImage.TYPE_INT_ARGB);
 				thepanel.mainimage.setRGB(0, 0, twidth, theight, theimage.getRGB(0, 0, twidth, theight, null, 0, twidth), 0, twidth);
 			} catch(Exception e) {
 				System.out.println("File \"" + filename + "\" could not be loaded. Continuing without file.");
+				thepanel.destFile = null;
 			}
 		}
 		JFrame window = new JFrame("Image Maker");
@@ -134,48 +127,51 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		window.setSize(thepanel.width + insets.left + insets.right, thepanel.height + insets.top + insets.bottom);
 		window.setMinimumSize(new Dimension(window.getWidth(), window.getHeight()));
 		window.setLocation((screenwidth() - thepanel.width) / 2 - insets.left, (screenheight() - thepanel.height) / 2 - insets.top);
-		thepanel.requestFocus();
 		window.toFront();
 		thepanel.resizable = true;
 		//wait for the panel to do something
-		while (thepanel.done == 0) {
+		while (true) {
 			while (thepanel.done == 0) {
 				try {
 					Thread.sleep(10);
 				} catch(Exception e) {
 				}
 			}
-			//importing
-			if (thepanel.done == 2) {
-				System.out.println("Enter the name of the file you wish to import to the copy image:");
+			JFileChooser chooser = new JFileChooser("images");
+			//picking file
+			if (thepanel.done == 1) {
+				chooser.setAcceptAllFileFilterUsed(false);
+				chooser.setFileFilter(new FileNameExtensionFilter("PNG files", "png"));
+				thepanel.destFile = (chooser.showSaveDialog(thepanel) == JFileChooser.APPROVE_OPTION) ?
+					chooser.getSelectedFile() :
+					null;
+			//saving
+			} else if (thepanel.done == 2) {
 				try {
-					thepanel.copyimage = ImageIO.read(new File("images/" + line() + ".png"));
-					System.out.println("The image has been imported.  Press \"PASTE\" to place it.");
+					File f = thepanel.destFile;
+					filename = f.getAbsolutePath();
+					if (!filename.endsWith(".png"))
+						f = new File(filename + ".png");
+					ImageIO.write(thepanel.mainimage, "png", f);
+					JOptionPane.showMessageDialog(thepanel, "You successfully saved '" + f.getName() + "'!");
 				} catch(Exception e) {
-					System.out.println("Sorry, your file could not be loaded.");
+					JOptionPane.showMessageDialog(thepanel, "Sorry, your image could not be saved.");
 				}
-				thepanel.done = 0;
-				thepanel.requestFocus();
-				window.toFront();
+			//importing
+			} else if (thepanel.done == 3) {
+				chooser.setFileFilter(new FileNameExtensionFilter("All Image Files", ImageIO.getReaderFileSuffixes()));
+				if (chooser.showOpenDialog(thepanel) == JFileChooser.APPROVE_OPTION) {
+					try {
+						thepanel.copyimage = ImageIO.read(chooser.getSelectedFile());
+						JOptionPane.showMessageDialog(thepanel, "The image has been imported.  Press \"Paste\" to place it.");
+					} catch(Exception e) {
+						JOptionPane.showMessageDialog(thepanel, "Sorry, your image could not be loaded.");
+					}
+				}
 			}
-		}
-		//saving the image
-		window.dispose();
-		if (filename.length() < 1)
-			System.out.println("Enter the name of the file you wish to save:");
-		else
-			System.out.println("Enter the name that you wish to save \"" + filename + "\" as:");
-		filename = line();
-		try {
-			ImageIO.write(thepanel.mainimage, "png", new File("images/" + filename + ".png"));
-			System.out.println("You successfully saved your image!");
-		} catch(Exception e) {
-			try {
-				ImageIO.write(thepanel.mainimage, "png", new File("image.png"));
-				System.out.println("You were unable to save \"images/" + filename + ".png\", but \"image.png\" was successfully saved.");
-			} catch(Exception f) {
-				System.out.println("Sorry, an error occured:\n" + f + "\nYour image could not be saved.");
-			}
+			thepanel.done = 0;
+			thepanel.repaint();
+			window.toFront();
 		}
 	}
 	public imagemaker() {
@@ -191,28 +187,28 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			for (int pos = 0; pos < lines.length; pos += 1) {
 				line = lines[pos];
 				if (line.startsWith("stats="))
-					statson = readint(line.substring(6, line.length()));
+					statson = readint(line.substring(6));
 				else if (line.startsWith("border="))
 					border = line.endsWith("true");
-				else if (line.startsWith("Xs=\\")) {
+				else if (line.startsWith("Xs=0x")) {
 					Xs = 2;
-					Xcolor = new Color(readint(line.substring(4, line.length())));
-				} else if (line.startsWith("Xs="))
-					Xs = (byte)(readint(line.substring(3, line.length())));
-				else if (line.startsWith("background=\\")) {
+					Xcolor = new Color(Integer.parseInt(line.substring(5), 16));
+				} else if (line.startsWith("Xs=*"))
+					Xs = (byte)(readint(line.substring(4)));
+				else if (line.startsWith("background=0x")) {
 					backsetting = 3;
-					backcolor = new Color(readint(line.substring(12, line.length())));
-				} else if (line.startsWith("background=")) {
-					backsetting = (byte)(readint(line.substring(11, line.length())));
+					backcolor = new Color(Integer.parseInt(line.substring(13), 16));
+				} else if (line.startsWith("background=*")) {
+					backsetting = (byte)(readint(line.substring(12)));
 					if (backsetting == 1)
 						backcolor = Color.WHITE;
 					else if (backsetting == 2)
 						backcolor = Color.BLACK;
 				} else if (line.startsWith("size="))
-					size = readint(line.substring(5, line.length()));
-				else if (line.startsWith("display=\\")) {
+					size = readint(line.substring(5));
+				else if (line.startsWith("display=0x")) {
 					display = 1;
-					displaycolor = new Color(readint(line.substring(9, line.length())));
+					displaycolor = new Color(Integer.parseInt(line.substring(10), 16));
 				}
 			}
 		}
@@ -609,16 +605,6 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.fillRect(100, innerheight - smallminy, -smallminx, 200 + smallminy - smallborder2y);
 		g.fillRect(300 - smallborder2x, innerheight - smallminy, smallborder2x, 200 + smallminy - smallborder2y);
 		g.fillRect(100, innerheight + 200 - smallborder2y, 200, smallborder2y);
-//defer to panel
-		if (panelnum == 0)
-			spanel.paint(g);
-		else {
-			try {
-				paint.invoke(panel, g);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
 //stats
 		if (statson > 0) {
 			g.setFont(new Font("Monospaced", Font.BOLD, 12));
@@ -659,6 +645,16 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				g.drawString(alpha + "", 77, 197 + innerheight);
 			}
 		}
+//defer to panel
+		if (panelnum == 0)
+			spanel.paint(g);
+		else {
+			try {
+				paint.invoke(panel, g);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
 //options "panel"
 		if (showoptions)
 			optionspaintComponent(g);
@@ -667,6 +663,9 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			panelspaintComponent(g);
 	}
 	public void clickaction(MouseEvent evt) {
+//don't do anything during file interactions
+		if (done != 0)
+			return;
 		int mousex = evt.getX();
 		int mousey = evt.getY();
 		int innerwidth = innerwidth();
@@ -685,7 +684,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					origin = -1;
 				}
 			}
-//defere to panels "panel"
+//defer to panels "panel"
 		} else if (showpanels) {
 			int newx = (innerwidth - 70) / 2;
 			int newy = (innerheight + 200 - panelsize) / 2;
@@ -1057,7 +1056,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawRect(newx - 3, newy - 3, 175, optionsize + 5);
 		g.drawRect(newx - 4, newy - 4, 177, optionsize + 7);
 		g.drawRect(newx - 5, newy - 5, 179, optionsize + 9);
-		g.setColor(new Color(255, 192, 0));
+		g.setColor(displaycolor);
 //height = 15 * rows + 10 + 20(save)
 		g.fillRect(newx, newy, 170, optionsize);
 		g.translate(newx, newy);
@@ -1164,17 +1163,17 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				if (border)
 					filer.writeline("border=" + border);
 				if (Xs < 1)
-					filer.writeline("Xs=" + Xs);
+					filer.writeline("Xs=*" + Xs);
 				else if (Xs > 1)
-					filer.writeline("Xs=\\" + (Xcolor.getRGB() & 0xFFFFFF));
+					filer.writeline("Xs=0x" + (Xcolor.getRGB() & 0xFFFFFF));
 				if (backsetting >= 3)
-					filer.writeline("background=\\" + (backcolor.getRGB() & 0xFFFFFF));
+					filer.writeline("background=0x" + (backcolor.getRGB() & 0xFFFFFF));
 				else if (backsetting != 0)
-					filer.writeline("background=" + backsetting);
+					filer.writeline("background=*" + backsetting);
 				if (size != 8)
 					filer.writeline("size=" + size);
 				if (display != 0)
-					filer.writeline("display=\\" + (displaycolor.getRGB() & 0xFFFFFF));
+					filer.writeline("display=0x" + (displaycolor.getRGB() & 0xFFFFFF));
 				filer.savefile();
 				System.out.println("You successfully saved your settings!");
 			} catch(Exception e) {
@@ -1268,7 +1267,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 		g.drawRect(newx - 3, newy - 3, 175, panelsize + 5);
 		g.drawRect(newx - 4, newy - 4, 177, panelsize + 7);
 		g.drawRect(newx - 5, newy - 5, 179, panelsize + 9);
-		g.setColor(new Color(255, 192, 0));
+		g.setColor(displaycolor);
 		g.fillRect(newx, newy, 170, panelsize);
 		g.translate(newx, newy);
 //main panel drawing
@@ -1378,7 +1377,7 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			g.fillRect(56, 56, 6, 6);
 			g.fillRect(32, 62, 6, 6);
 			g.fillRect(62, 62, 6, 6);
-//draw tools and such
+//draw tools and such on the side panel
 			g.setColor(Color.BLUE);
 			g.fillRect(12, 465, 75, 30);
 			g.fillRect(12, 500, 75, 30);
@@ -1389,16 +1388,18 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			g.drawRect(13, 466, 72, 27);
 			g.drawRect(13, 501, 72, 27);
 			g.drawRect(13, 536, 72, 27);
-			g.drawRect(1, 571, 97, 27);
+			g.drawRect(1, 571, 27, 27);
+			g.drawRect(31, 571, 67, 27);
 			g.setColor(new Color(192, 192, 192));
 			g.setFont(new Font("Monospaced", Font.BOLD, 24));
 			g.drawString("Draw", 22, 487);
 			g.drawString("Erase", 15, 522);
-			g.drawString("Save", 22, 592);
+			g.drawString("Save", 37, 592);
 			g.setColor(new Color(192, 192, 192));
 			g.setFont(new Font("Monospaced", Font.BOLD, 16));
 			g.drawString("Absorb", 20, 554);
-
+			UIManager.getIcon("FileView.fileIcon").paintIcon(null, g, 7, 575);
+//draw tools and such on the bottom panel
 			g = bottompanel.createGraphics();
 			g.setColor(Color.BLUE);
 			g.fillRect(0, 0, 75, 30);
@@ -1514,10 +1515,10 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 			g.drawLine(325, 162, 328, 159);
 		}
 		public void paint(Graphics g) {
-			g.drawImage(rightpanel, innerwidth(), 0, null);
-			g.drawImage(bottompanel, 0, innerheight(), null);
 			int innerwidth = innerwidth();
 			int innerheight = innerheight();
+			g.drawImage(rightpanel, innerwidth, 0, null);
+			g.drawImage(bottompanel, 0, innerheight, null);
 //color selection
 			g.setColor(new Color(red, green, blue, alpha));
 			g.fillRect(26 + innerwidth, 26, 48, 48);
@@ -1568,13 +1569,21 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				if (redo == null)
 					g.fillRect(40, 105 + innerheight, 35, 20);
 			}
+//hiding save
+			if (destFile == null) {
+				g.setColor(displaycolor);
+				g.fillRect(innerwidth + 30, 570, 70, 30);
+			} else if (mainimage == null) {
+				g.setColor(new Color(displaycolor.getRed(), displaycolor.getGreen(), displaycolor.getBlue(), 192));
+				g.fillRect(innerwidth + 30, 570, 70, 30);
+			}
 //what's getting clicked on
 			if (greenrect) {
 				g.setColor(new Color(0, 255, 0, 128));
 				if (origin2 == 101)
 					g.fillRect(0, innerheight, 75, 30);
-				else if (origin2 == 102)
-					g.fillRect(0, 35 + innerheight, 75, 30);
+				//import will be handled via checking for done
+				//else if (origin2 == 102) {
 				else if (origin2 == 103)
 					g.fillRect(310, 110 + innerheight, 20, 20);
 				else if (origin2 == 104)
@@ -1605,6 +1614,33 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					g.fillRect(0, 105 + innerheight, 35, 20);
 				else if (origin2 == 111)
 					g.fillRect(40, 105 + innerheight, 35, 20);
+			//draw the green rect if done is 1 for file choosing
+			} else if (done == 1) {
+				g.setColor(new Color(0, 255, 0, 128));
+				g.fillRect(innerwidth, 570, 30, 30);
+				g.setColor(new Color(0, 0, 0, 192));
+				g.fillRect(0, 0, width, 570);
+				g.fillRect(0, 570, width - 100, 30);
+				g.fillRect(innerwidth + 30, 570, 70, 30);
+				if (height > 600)
+					g.fillRect(0, 600, width, height - 600);
+			//draw the green rect if done is 2 for saving
+			} else if (done == 2) {
+				g.setColor(new Color(0, 255, 0, 128));
+				g.fillRect(innerwidth + 30, 570, 70, 30);
+				g.setColor(new Color(0, 0, 0, 192));
+				g.fillRect(0, 0, width, 570);
+				g.fillRect(0, 570, width - 70, 30);
+				if (height > 600)
+					g.fillRect(0, 600, width, height - 600);
+			//draw the green rect if done is 2 for importing
+			} else if (done == 3) {
+				g.setColor(new Color(0, 255, 0, 128));
+				g.fillRect(0, 35 + innerheight, 75, 30);
+				g.setColor(new Color(0, 0, 0, 192));
+				g.fillRect(0, 0, width, 35 + innerheight);
+				g.fillRect(75, 35 + innerheight, width - 75, 30);
+				g.fillRect(0, 65 + innerheight, width, 135);
 			}
 		}
 		public void click(MouseEvent evt) {
@@ -1843,9 +1879,12 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 					else
 						alpha = 256 - 16 * posy;
 				}
-//save
-			} else if (mousex >= innerwidth && mousex < 100 + innerwidth && mousey >= 570 && mousey < 600 && origin2 == 0 && mainimage != null)
+//choose file
+			} else if (mousex >= innerwidth && mousex < 30 + innerwidth && mousey >= 570 && mousey < 600 && origin2 == 0)
 				done = 1;
+//save
+			else if (mousex >= innerwidth + 30 && mousex < 100 + innerwidth && mousey >= 570 && mousey < 600 && origin2 == 0 && mainimage != null && destFile != null)
+				done = 2;
 //reset
 			else if (mousex >= 0 && mousex < 75 && mousey >= innerheight && mousey < 30 + innerheight && origin2 == 0) {
 				imagex = 0;
@@ -1853,12 +1892,10 @@ public class imagemaker extends JPanel implements MouseListener, MouseMotionList
 				origin2 = 101;
 				greenrect = true;
 //import
-			} else if (mousex >= 0 && mousex < 75 && mousey >= 35 + innerheight && mousey < 65 + innerheight && origin2 == 0) {
-				done = 2;
-				origin2 = 102;
-				greenrect = true;
+			} else if (mousex >= 0 && mousex < 75 && mousey >= 35 + innerheight && mousey < 65 + innerheight && origin2 == 0)
+				done = 3;
 //rotate, vertical flip, or horizontal flip
-			} else if (mousex >= 310 && mousex < 380 && (mousex - 310) % 25 < 20 && mousey >= 110 + innerheight && mousey < 130 + innerheight && origin2 == 0 && copyimage != null) {
+			else if (mousex >= 310 && mousex < 380 && (mousex - 310) % 25 < 20 && mousey >= 110 + innerheight && mousey < 130 + innerheight && origin2 == 0 && copyimage != null) {
 				int cwidth = copyimage.getWidth();
 				int cheight = copyimage.getHeight();
 				//25 * 103 - 310 = 2265
